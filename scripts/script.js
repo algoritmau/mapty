@@ -67,7 +67,7 @@ class Cycling extends Workout {
 
 // App Architecture
 const form = document.querySelector('.form');
-const containerWorkouts = document.querySelector('.workouts');
+const workoutsContainer = document.querySelector('.workouts');
 const inputType = document.querySelector('.form__input--type');
 const inputDistance = document.querySelector('.form__input--distance');
 const inputDuration = document.querySelector('.form__input--duration');
@@ -76,6 +76,7 @@ const inputElevation = document.querySelector('.form__input--elevation');
 
 class App {
   #map;
+  #mapZoomLevel = 17;
   #mapEvent;
   #workouts = [];
 
@@ -84,6 +85,10 @@ class App {
 
     form.addEventListener('submit', this._newWorkout.bind(this));
     inputType.addEventListener('change', this._toggleElevationField);
+    workoutsContainer.addEventListener(
+      'click',
+      this._focusMapMarker.bind(this)
+    );
   }
 
   _getPosition() {
@@ -97,7 +102,7 @@ class App {
   _loadMap(position) {
     const { latitude, longitude } = position.coords;
     const myCoords = [latitude, longitude];
-    this.#map = L.map('map').setView(myCoords, 17);
+    this.#map = L.map('map').setView(myCoords, this.#mapZoomLevel);
 
     L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', {
       attribution:
@@ -269,6 +274,23 @@ class App {
     }
 
     form.insertAdjacentHTML('afterend', workoutHtml);
+  }
+
+  _focusMapMarker(e) {
+    const workoutEl = e.target.closest('.workout');
+
+    if (!workoutEl) return;
+
+    const workout = this.#workouts.find(
+      (log) => log.id === Number(workoutEl.dataset.id)
+    );
+
+    this.#map.setView(workout.coords, this.#mapZoomLevel, {
+      animate: true,
+      pan: {
+        duration: 1,
+      },
+    });
   }
 }
 
